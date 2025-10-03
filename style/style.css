@@ -1,0 +1,23 @@
+body {
+    margin: 0;
+    overflow: hidden; /* スクロールバーを隠す */
+}
+svg {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+.handwritten-cup {
+    fill: red;
+    stroke: black;
+    stroke-width: 5;
+    stroke-linecap: round; /* 線の端を丸くする */
+    stroke-linejoin: round; /* 線の角を丸くする */
+}
+.handwritten-line {
+    fill: none;
+    stroke: black;
+    stroke-width: 5;
+    stroke-linecap: round; /* 線の端を丸くする */
+    stroke-linejoin: round; /* 線の角を丸くする */
+}

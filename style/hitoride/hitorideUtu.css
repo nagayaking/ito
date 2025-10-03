@@ -1,0 +1,21 @@
+.hitorideUtu {
+    display: none;
+}
+
+.hitorideUtu button {
+    width: 150px;
+    height: 50px;
+    font-size: 20px;
+    position: absolute;
+    top: 70%;
+    left: calc(50% - 75px);
+}
+
+.hitorideUtu button:hover {
+    background-color: lightblue;
+}
+
+.hitorideUtu button:active {
+    background-color: blue;
+    color: white;
+}
