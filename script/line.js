@@ -92,6 +92,17 @@ function drawLine(svg, svgNS) {
     const roughness = 5; // 揺れの大きさ
     const segmentsRate = 50; // 1セグメントあたりの長さ
 
+    class Point {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+        }
+        move(x, y){
+            this.x = x + ;
+        }
+    }
+
+
     // 1. ポイントを生成
     const linePoints = [];
     const lineSegments = (defaultLines[1][0] - defaultLines[0][0]) / segmentsRate | 0;
