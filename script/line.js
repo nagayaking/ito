@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const svg = document.createElementNS(svgNS, "svg");
     document.body.appendChild(svg);
     
-    function redraw() {
+    function drawCup() {
         svg.innerHTML = ''; // 既存の内容をクリア
 
         const cupPath = document.createElementNS(svgNS, "path");
@@ -64,15 +64,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // 最後の点を結ぶ
     pathDataCup += ` L ${cupPoints[cupPoints.length - 1][0]} ${cupPoints[cupPoints.length - 1][1]}`;
         
-    drawLine(svg, svgNS);
-
     cupPath.setAttribute("d", pathDataCup);
     svg.appendChild(cupPath);
-    }
+}
 
-    redraw();
+    drawLine(svg, svgNS);
+    drawCup();
 
-    setInterval(redraw, 200); // 3秒ごとに再描画
+    setInterval(drawCup, 200); // 3秒ごとに再描画
 
 });
 
@@ -85,12 +84,13 @@ function drawLine(svg, svgNS) {
 
         //きれいな線
     const defaultLines = [
-        [height, 0.7*height],
+        [0.4*height, 0.7*height],
         [width, 0.7*height]
     ];
 
     const roughness = 5; // 揺れの大きさ
     const segmentsRate = 50; // 1セグメントあたりの長さ
+
 
     // 1. ポイントを生成
     const linePoints = [];
@@ -100,7 +100,7 @@ function drawLine(svg, svgNS) {
         const y = defaultLines[0][1] + ( (defaultLines[1][1] - defaultLines[0][1]) / lineSegments) * i;
         const shake = (i === 0 || i === lineSegments) ? 0 : (Math.random() - 0.5) * roughness;
         linePoints.push([x, y + shake]);
-    }    
+    }
 
     //  2. ポイントを元に滑らかなパスを作成
     let pathDataLine = `M ${linePoints[0][0]} ${linePoints[0][1]}`; //最初の点
