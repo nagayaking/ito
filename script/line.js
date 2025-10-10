@@ -97,8 +97,10 @@ function drawLine(svg, svgNS) {
             this.x = x;
             this.y = y;
         }
-        move(x, y){
-            this.x = x + ;
+        // 位置を右に動かす
+        move(){
+            this.x += 1;
+            this.y += 1; 
         }
     }
 
