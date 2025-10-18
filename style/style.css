@@ -10,14 +10,14 @@ svg {
 .handwritten-cup {
     fill: red;
     stroke: black;
-    stroke-width: 5;
+    stroke-width: 4;
     stroke-linecap: round; /* 線の端を丸くする */
     stroke-linejoin: round; /* 線の角を丸くする */
 }
 .handwritten-line {
     fill: none;
     stroke: black;
-    stroke-width: 5;
+    stroke-width: 4;
     stroke-linecap: round; /* 線の端を丸くする */
     stroke-linejoin: round; /* 線の角を丸くする */
 }
