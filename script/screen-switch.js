@@ -8,10 +8,10 @@ startToHitoride.onclick = function() {
 hitorideToStart.onclick = function() {
     document.querySelector('.hitorideMenu').style.display = 'none';
     document.querySelector('.start').style.display = 'flex';
-    // 画面切り替えたらv.jsを削除する
+    // 画面切り替えたらline.jsを削除する
     const scripts = document.getElementsByTagName('script');
     for (let i = 0; i < scripts.length; i++) {
-        if (scripts[i].src.includes('v.js')) {
+        if (scripts[i].src.includes('line.js')) {
             document.body.removeChild(scripts[i]);
         }
     }
@@ -28,6 +28,6 @@ hitorideMenuToUtu.onclick = function() {
     document.querySelector('.hitorideUtu').style.display = 'block';
         // 画面切り替えたらv.jsを読み込む
     const script = document.createElement('script');
-    script.src = 'script/v.js';
+    script.src = 'script/line.js';
     document.body.appendChild(script);
 }
