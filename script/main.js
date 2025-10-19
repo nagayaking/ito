@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function fixedanimete() {
         // myLine.updateRoughness();
-        myLine.propagateWave();
         myCup.draw();
     }
     

@@ -8,10 +8,14 @@ class Line {
         this.rawPoints = [];
         this.roughness = 5;
         this.segmentsRate = 50;
-        this.speed = 0.1;
+        this.speed = 1;
         this.pathElement = document.createElementNS(this.svgNS, 'path');
         this.pathElement.setAttribute('class', 'handwritten-line');
         this.svg.appendChild(this.pathElement);
+
+        // 点の円を管理するためのグループ要素を追加
+        this.pointElementsGroup = document.createElementNS(this.svgNS, 'g');
+        this.svg.appendChild(this.pointElementsGroup);
 
         this.isWaving = false; // 波の状態を管理するプロパティを追加
 
@@ -23,6 +27,7 @@ class Line {
 
     startWave() {
         this.isWaving = true;
+
     }
 
     stopWave() {
@@ -43,7 +48,8 @@ class Line {
     }
 
     updatePoints() {
-        // 1. すべての点を右に動かす
+        // 1. 左端の点以外を右に動かす
+        const fixedpoint = this.rawPoints.shift(); // 左端の点を一時的に取り出す
         this.rawPoints.forEach(point => {
             point.x += this.speed;
         });
@@ -54,33 +60,25 @@ class Line {
 
         // 3. 左側に隙間ができていたら、新しい点を追加して埋める
         //    （whileループを使うことで、もしアニメーションが遅れても一気に隙間を埋められる）
-        while (this.rawPoints.length > 0 && this.rawPoints[0].x > 1.2 * this.height) {
-            const newY = 0.7 * this.height + (Math.random() - 0.5) * this.roughness;
-            const newX = this.rawPoints[0].x - this.segmentsRate;
-            this.rawPoints.unshift({x: newX, y: newY});
-        }
-    }
-    propagateWave() {
-        // 配列が短い場合は何もしない
-        if (this.rawPoints.length < 10) return;
-        // 1. 波の「源」となる点のY座標を決める
-        const waveSourceIndex = 2; // 例えば、左から5番目の点を波の源とする
+        while (this.rawPoints.length > 0 && this.rawPoints[1].x > this.height + this.segmentsRate) {
         const centerY = 0.7 * this.height;
+            let newY;
 
         if (this.isWaving) {
-            // 押されている時は、源の点を高い位置に
-            this.rawPoints[waveSourceIndex].y = centerY - 30; // 振幅30
+                // ボタンが押されている時は、高い位置に点を生成
+                newY = centerY - 100;
         } else {
-            // 押されていない時は、源の点をランダムに揺らす
-            this.rawPoints[waveSourceIndex].y = centerY + (Math.random() - 0.5) * this.roughness;
+                // 押されていない時は、通常のランダムな高さに点を生成
+                newY = centerY + (Math.random() - 0.5) * this.roughness;
         }
 
-        // 2. Y座標を右へ伝播させる (重要：ループは右から左へ！)
-        // 右端の点から始め、一つ左の点のy座標を自分にコピーする
-        for (let i = this.rawPoints.length - 1; i > 0; i--) {
-            this.rawPoints[i].y = this.rawPoints[i - 1].y;
+            const newX = this.rawPoints[1].x - this.segmentsRate;
+            this.rawPoints.unshift({x: newX, y: newY});
         }
-    }
+        // 4. 取り出しておいた左端の点を再び配列の先頭に戻す
+        this.rawPoints.unshift(fixedpoint);
+        }
+
 
     updateRoughness() {
         this.rawPoints.forEach(point => {
@@ -89,11 +87,29 @@ class Line {
     }
 
     draw() {
+        // 線のパスを描画
         const pathData = this.buildPathData();
         this.pathElement.setAttribute("d", pathData);
+
+        // 点の円を描画
+        // 1. まず、既存の円をすべて削除する
+        while (this.pointElementsGroup.firstChild) {
+            this.pointElementsGroup.removeChild(this.pointElementsGroup.firstChild);
+        }
+
+        // 2. 現在のすべての点の位置に新しい円を作成して追加する
+        this.rawPoints.forEach(point => {
+            const circle = document.createElementNS(this.svgNS, 'circle');
+            circle.setAttribute('cx', point.x);
+            circle.setAttribute('cy', point.y);
+            circle.setAttribute('r', '3'); // 円の半径
+            circle.setAttribute('fill', 'red'); // 円の色
+            this.pointElementsGroup.appendChild(circle);
+        });
     }
 
     destroy() {
         this.pathElement.remove();
+        this.pointElementsGroup.remove();
     }
 }
