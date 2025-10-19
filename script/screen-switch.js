@@ -26,8 +26,5 @@ hitorideToStart.onclick = function() {
 hitorideMenuToUtu.onclick = function() {
     document.querySelector('.hitorideMenu').style.display = 'none';
     document.querySelector('.hitorideUtu').style.display = 'block';
-        // 画面切り替えたらline.jsを読み込む
-    const script = document.createElement('script');
-    script.src = 'script/line.js';
-    document.body.appendChild(script);
+
 }

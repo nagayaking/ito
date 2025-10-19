@@ -1,0 +1,80 @@
+ボタンをクリックしたときの時間にカップの右端にいる点は高くなるけどそれ以外の時間にカップの右端にいる点は低いままみたい
+  な感じで動く波みたいな挙動をしてほしいんですよね
+
+✦ なるほど、さらに高度な表現ですね！理解しました。
+
+  「ボタンを押した瞬間に、カップの位置から波が発生し、それが線の上を伝わっていく」という動きですね。これは、これまでの「
+  線全体の状態を一斉に変える」という考え方から、少し発想を変える必要があります。
+
+  考え方の転換：Y座標の伝言ゲーム
+
+  この動きを実装するのに適しているのが、「Y座標の伝言ゲーム」という考え方です。
+
+   1. まず、波の源となる点（カップのすぐ右の点）のY座標だけを決めます。
+       * ボタンが押されている（isWavingがtrue）なら、高いY座標
+       * 押されていないなら、通常のランダムなY座標
+
+   2. 次に、それ以外のすべての点について、「自分のY座標を、一つ左隣の点のY座標と同じにする」という処理をします。
+
+  これを毎フレーム繰り返すと、波の源で生まれた「高いY座標」が、フレームごとに一つずつ右の点、さらに右の点へと伝わってい
+  き、まるで波が伝播しているように見えます。電光掲示板の文字が左から右へ流れていくのと同じ原理です。
+
+  実装のヒント
+
+  この新しいロジックを実装するために、Lineクラスを以下のように修正します。
+
+  ヒント1: 新しいメソッドを作る
+
+  この「波の伝播」ロジックは、updatePoints（X座標の移動）と同じく、毎フレーム実行する必要があります。
+  setIntervalで呼ばれるupdateRoughnessは頻度が低いので、代わりにpropagateWave（波を伝播させる）のような新しいメソッドを
+  作り、requestAnimationFrameで動いているanimate関数から呼び出すのが良いでしょう。
+
+  ファイル: main.js
+
+   1 // main.js
+   2 function animate() {
+   3     myLine.updatePoints(); // X座標を動かす
+   4     myLine.propagateWave(); // Y座標を伝播させる（新しいメソッド）
+   5     myLine.draw();
+   6     requestAnimationFrame(animate);
+   7 }
+
+  ヒント2: propagateWaveメソッドの中身
+
+  Lineクラスに追加する新しいpropagateWaveメソッドは、以下のようになります。
+
+  ファイル: line.js
+
+    1 // line.js の Lineクラス内に追加
+    2
+    3     propagateWave() {
+    4         // 配列が短い場合は何もしない
+    5         if (this.rawPoints.length < 10) return;
+    6
+    7         // 1. 波の「源」となる点のY座標を決める
+    8         const waveSourceIndex = 5; // 例えば、左から5番目の点を波の源とする
+    9         const centerY = 0.7 * this.height;
+   10
+   11         if (this.isWaving) {
+   12             // 押されている時は、源の点を高い位置に
+   13             this.rawPoints[waveSourceIndex].y = centerY - 30; // 振幅30
+   14         } else {
+   15             // 押されていない時は、源の点をランダムに揺らす
+   16             this.rawPoints[waveSourceIndex].y = centerY + (Math.random() - 0.5) * this.roughness;
+   17         }
+   18
+   19         // 2. Y座標を右へ伝播させる (重要：ループは右から左へ！)
+   20         // 右端の点から始め、一つ左の点のy座標を自分にコピーする
+   21         for (let i = this.rawPoints.length - 1; i > 0; i--) {
+   22             this.rawPoints[i].y = this.rawPoints[i - 1].y;
+   23         }
+   24     }
+  ポイント: forループを右から左へ（iを減らしながら）実行するのがコツです。もし左から右へループすると、すべての点が同じY
+  座標になってしまうためです。
+
+  ヒント3: updateRoughnessは不要に
+
+  この新しいpropagateWaveメソッドがY座標の更新をすべて担当するので、setIntervalでupdateRoughnessを呼び出す必要はなくな
+  ります。main.jsのfixedanimete関数とsetIntervalの行は、コメントアウトするか削除して大丈夫です。
+
+  この方法で、意図されている「伝わる波」が表現できるはずです。試してみていただけますでしょうか。

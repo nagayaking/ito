@@ -1,147 +1,99 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const svgNS = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(svgNS, "svg");
-    document.body.appendChild(svg);
+class Line {
+    constructor(svg, svgNS, width, height) {
+        this.svg = svg;
+        this.svgNS = svgNS;
+        this.width = width;
+        this.height = height;
 
-    let currentCupPath = null;
-    let currentLinePath = null;
-    const width = window.innerWidth;
-    const height = window.innerHeight / 2;
+        this.rawPoints = [];
+        this.roughness = 5;
+        this.segmentsRate = 50;
+        this.speed = 0.1;
+        this.pathElement = document.createElementNS(this.svgNS, 'path');
+        this.pathElement.setAttribute('class', 'handwritten-line');
+        this.svg.appendChild(this.pathElement);
 
-    function drawCup() {
-        if (currentCupPath) {
-            currentCupPath.remove();
-        }
+        this.isWaving = false; // 波の状態を管理するプロパティを追加
 
-        const newCupPath = document.createElementNS(svgNS, "path");
-        newCupPath.setAttribute('class', 'handwritten-cup');
-
-
-        const roughness = 5; // 揺れの大きさ
-        const segmentsRate = 50; // 1セグメントあたりの長さ
-
-        //きれいな紙コップ
-        const defaultDots = [
-            [0.3 * height, 0.4 * height], //左上
-            [0.3 * height, height], //左下
-            [1.1 * height, 0.9 * height], //右下
-            [1.1 * height, 0.5 * height] //右上
-        ];
-
-        // 1. ポイントを生成
-        const cupPoints = [defaultDots[0]];
-        for (let i = 0; i < defaultDots.length; i++) {
-            const dx = (i !== 3) ? defaultDots[i + 1][0] - defaultDots[i][0] : defaultDots[0][0] - defaultDots[3][0];
-            const dy = (i !== 3) ? defaultDots[i + 1][1] - defaultDots[i][1] : defaultDots[0][1] - defaultDots[3][1];
-            const cupSegments = Math.sqrt(dx ** 2 + dy ** 2) / segmentsRate | 0;
-            const blur = pointBlur(defaultDots[i], (i !== 3) ? defaultDots[i + 1] : defaultDots[0]);
-
-            // 始点を飛ばして終点まで
-            for (let j = 0; j <= cupSegments; j++) {
-                const x = defaultDots[i][0] + (dx / cupSegments) * j;
-                const y = defaultDots[i][1] + (dy / cupSegments) * j;
-                // 終点が大きく揺れないように調整
-                const shakeX = (j === cupSegments) ? 0 : (Math.random() - 0.5) * roughness * blur[0];
-                const shakeY = (j === cupSegments) ? 0 : (Math.random() - 0.5) * roughness * blur[1];
-                cupPoints.push([x + shakeX, y + shakeY]);
-            }
-        }
-
-        // ポイントのブレを考える関数
-        function pointBlur(pointA, pointB) {
-            const dx = Math.abs(pointA[0] - pointB[0]);
-            const dy = Math.abs(pointA[1] - pointB[1]);
-            const sum = dx + dy
-            return [dy / sum, dx / sum]
-        }
-
-        //  2. ポイントを元に滑らかなパスを作成
-        let pathDataCup = `M ${cupPoints[0][0]} ${cupPoints[0][1]}`; //最初の点
-        for (let i = 0; i < cupPoints.length - 1; i++) {
-            const P0 = cupPoints[i];
-            const P1 = cupPoints[i + 1];
-            const midPointX = (P0[0] + P1[0]) / 2; //各点の中点を作成
-            const midPointY = (P0[1] + P1[1]) / 2;
-            pathDataCup += ` Q ${P0[0]} ${P0[1]}, ${midPointX} ${midPointY}`;
-        }
-        // 最後の点を結ぶ
-        pathDataCup += ` L ${cupPoints[cupPoints.length - 1][0]} ${cupPoints[cupPoints.length - 1][1]}`;
-
-        newCupPath.setAttribute("d", pathDataCup);
-        svg.appendChild(newCupPath);
-        currentCupPath = newCupPath;
-    }
-        
-    class Line {
-        constructor() {
-            this.rawPoints = [];
-            this.roughness = 5;
-            this.segmentsRate = 50;
-            this.speed = 1;
-            this.pathElement = document.createElementNS(svgNS, 'path');
-            this.pathElement.setAttribute('class', 'handwritten-line');
-            svg.appendChild(this.pathElement);
-
-            for (let x = 0.4 * height; x <= width; x += this.segmentsRate) {
-                let y = 0.7 * height + (Math.random() - 0.5) * this.roughness;
-                this.rawPoints.push({x: x, y: y, })
-            }
-        }
-
-        buildPathData() { 
-            if (!this.rawPoints || this.rawPoints.length < 2) return "";
-            let pathData = `M ${this.rawPoints[0].x} ${this.rawPoints[0].y}`; //最初の点
-            for (let i = 0; i < this.rawPoints.length - 1; i++) {
-                const P0 = this.rawPoints[i];
-                const P1 = this.rawPoints[i + 1];
-                const midPointX = (P0.x + P1.x) / 2; //各点の中点を作成
-                const midPointY = (P0.y + P1.y) / 2;
-                pathData += ` Q ${P0.x} ${P0.y}, ${midPointX} ${midPointY}`;
-            }
-            return pathData;
-        }
-
-        updatePoints() {
-            this.rawPoints.forEach(point => {
-                point.x += this.speed;
-            });
-            if (this.rawPoints[this.rawPoints.length - 1].x > width + this.segmentsRate * 2) {
-                this.rawPoints.pop();
-                let y = 0.7 * height + (Math.random() - 0.5) * this.roughness;
-                this.rawPoints.unshift({x: 0.4 * height, y: y});
-            }
-        }
-
-        updateRoughness() {
-            this.rawPoints.forEach(point => {
-                point.y = 0.7 * height + (Math.random() - 0.5) * this.roughness;
-            });
-        }
-
-        draw() {
-            const pathData = this.buildPathData();
-            this.pathElement.setAttribute("d", pathData);
-        }
-
-        destroy() {
-            this.pathElement.remove();
+        for (let x = 1.2 * this.height; x <= this.width; x += this.segmentsRate) {
+            let y = 0.7 * this.height + (Math.random() - 0.5) * this.roughness;
+            this.rawPoints.push({x: x, y: y, })
         }
     }
 
-    const myLine = new Line();
-
-    function animate() {
-    
-        myLine.updatePoints();
-        myLine.draw();
-        requestAnimationFrame(animate);
+    startWave() {
+        this.isWaving = true;
     }
 
-    function fixedanimete() {
-        myLine.updateRoughness();
-        drawCup();
+    stopWave() {
+        this.isWaving = false;
     }
-    
-    setInterval(fixedanimete, 400);
-    animate();
-})
+
+    buildPathData() { 
+        if (!this.rawPoints || this.rawPoints.length < 2) return "";
+        let pathData = `M ${this.rawPoints[0].x} ${this.rawPoints[0].y}`;
+        for (let i = 0; i < this.rawPoints.length - 1; i++) {
+            const P0 = this.rawPoints[i];
+            const P1 = this.rawPoints[i + 1];
+            const midPointX = (P0.x + P1.x) / 2;
+            const midPointY = (P0.y + P1.y) / 2;
+            pathData += ` Q ${P0.x} ${P0.y}, ${midPointX} ${midPointY}`;
+        }
+        return pathData;
+    }
+
+    updatePoints() {
+        // 1. すべての点を右に動かす
+        this.rawPoints.forEach(point => {
+            point.x += this.speed;
+        });
+
+        // 2. 画面の右側にはみ出しすぎた点を配列から削除する
+        //    （配列が無限に長くなるのを防ぐ）
+        this.rawPoints = this.rawPoints.filter(p => p.x < this.width + 200); // 画面幅+200pxより左にある点だけを残す
+
+        // 3. 左側に隙間ができていたら、新しい点を追加して埋める
+        //    （whileループを使うことで、もしアニメーションが遅れても一気に隙間を埋められる）
+        while (this.rawPoints.length > 0 && this.rawPoints[0].x > 1.2 * this.height) {
+            const newY = 0.7 * this.height + (Math.random() - 0.5) * this.roughness;
+            const newX = this.rawPoints[0].x - this.segmentsRate;
+            this.rawPoints.unshift({x: newX, y: newY});
+        }
+    }
+    propagateWave() {
+        // 配列が短い場合は何もしない
+        if (this.rawPoints.length < 10) return;
+        // 1. 波の「源」となる点のY座標を決める
+        const waveSourceIndex = 2; // 例えば、左から5番目の点を波の源とする
+        const centerY = 0.7 * this.height;
+
+        if (this.isWaving) {
+            // 押されている時は、源の点を高い位置に
+            this.rawPoints[waveSourceIndex].y = centerY - 30; // 振幅30
+        } else {
+            // 押されていない時は、源の点をランダムに揺らす
+            this.rawPoints[waveSourceIndex].y = centerY + (Math.random() - 0.5) * this.roughness;
+        }
+
+        // 2. Y座標を右へ伝播させる (重要：ループは右から左へ！)
+        // 右端の点から始め、一つ左の点のy座標を自分にコピーする
+        for (let i = this.rawPoints.length - 1; i > 0; i--) {
+            this.rawPoints[i].y = this.rawPoints[i - 1].y;
+        }
+    }
+
+    updateRoughness() {
+        this.rawPoints.forEach(point => {
+            point.y = 0.7 * this.height + (Math.random() - 0.5) * this.roughness;
+        });
+    }
+
+    draw() {
+        const pathData = this.buildPathData();
+        this.pathElement.setAttribute("d", pathData);
+    }
+
+    destroy() {
+        this.pathElement.remove();
+    }
+}
