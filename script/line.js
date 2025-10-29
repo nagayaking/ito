@@ -8,7 +8,7 @@ class Line {
         this.rawPoints = [];
         this.roughness = 5;
         this.segmentsRate = 50;
-        this.speed = 1;
+        this.speed = 2;
         this.pathElement = document.createElementNS(this.svgNS, 'path');
         this.pathElement.setAttribute('class', 'handwritten-line');
         this.svg.appendChild(this.pathElement);
@@ -27,11 +27,22 @@ class Line {
 
     startWave() {
         this.isWaving = true;
+        random1 = Math.random();
+        random2 = Math.random();
+        random3 = Math.random();
 
+        this.rawPoints.splice(1, 0, 
+            {x: 1.2 * this.height, y: 0.7 * this.height - 100}, 
+            {x: 1.2 * this.height, y: 0.7 * this.height - 100 + (Math.random() - 0.5) * this.roughness},             
+            {x: 1.2 * this.height, y: 0.7 * this.height + (Math.random() - 0.5) * this.roughness},
+            {x: 1.2 * this.height, y: 0.7 * this.height + (Math.random() - 0.5) * this.roughness});
     }
 
     stopWave() {
         this.isWaving = false;
+        this.rawPoints.splice(1, 0, 
+            {x: 1.2 * this.height, y: 0.7 * this.height}, 
+            {x: 1.2 * this.height, y: 0.7 * this.height + (Math.random() - 0.5) * this.roughness});
     }
 
     buildPathData() { 
@@ -48,36 +59,56 @@ class Line {
     }
 
     updatePoints() {
-        // 1. 左端の点以外を右に動かす
-        const fixedpoint = this.rawPoints.shift(); // 左端の点を一時的に取り出す
-        this.rawPoints.forEach(point => {
-            point.x += this.speed;
-        });
-
-        // 2. 画面の右側にはみ出しすぎた点を配列から削除する
-        //    （配列が無限に長くなるのを防ぐ）
-        this.rawPoints = this.rawPoints.filter(p => p.x < this.width + 200); // 画面幅+200pxより左にある点だけを残す
-
-        // 3. 左側に隙間ができていたら、新しい点を追加して埋める
-        //    （whileループを使うことで、もしアニメーションが遅れても一気に隙間を埋められる）
-        while (this.rawPoints.length > 0 && this.rawPoints[1].x > this.height + this.segmentsRate) {
-        const centerY = 0.7 * this.height;
-            let newY;
-
         if (this.isWaving) {
-                // ボタンが押されている時は、高い位置に点を生成
-                newY = centerY - 100;
-        } else {
-                // 押されていない時は、通常のランダムな高さに点を生成
-                newY = centerY + (Math.random() - 0.5) * this.roughness;
-        }
+            // 波を出している最中は、左端の点を上下に設置し固定して、他の点を右に動かす
+            const fixedpoints = this.rawPoints.splice(0,2); // 左端の点を一時的に取り出す
+            this.rawPoints.forEach(point => {
+                point.x += this.speed;
+            });
+            // 2. 取り出しておいた左端の点を再び配列の先頭に戻す
+            this.rawPoints.unshift(...fixedpoints);
 
-            const newX = this.rawPoints[1].x - this.segmentsRate;
-            this.rawPoints.unshift({x: newX, y: newY});
+            // 3. 画面の右側にはみ出しすぎた点を配列から削除する
+            //    （配列が無限に長くなるのを防ぐ）
+            this.rawPoints = this.rawPoints.filter(p => p.x < this.width + 200); // 画面幅+200pxより左にある点だけを残す
+            // 4. 左側に隙間ができていたら、新しい点を追加して埋める
+            //    （whileループを使うことで、もしアニメーションが遅れても一気に隙間を埋められる）
+            while (this.rawPoints.length > 0 && this.rawPoints[2].x > this.height*1.2 + this.segmentsRate) {
+                const centerY = 0.7 * this.height;
+                let newY;
+
+                newY = centerY - 100;
+
+                const newX = this.rawPoints[2].x - this.segmentsRate;
+                this.rawPoints.splice(1,0,{x: newX, y: newY});
+            }
+
+        }else {
+            // 1. 左端の点以外を右に動かす
+            const fixedpoint = this.rawPoints.shift(); // 左端の点を一時的に取り出す
+            this.rawPoints.forEach(point => {
+                point.x += this.speed;
+            });
+            // 2. 取り出しておいた左端の点を再び配列の先頭に戻す
+            this.rawPoints.unshift(fixedpoint);
+
+            // 3. 画面の右側にはみ出しすぎた点を配列から削除する
+            //    （配列が無限に長くなるのを防ぐ）
+            this.rawPoints = this.rawPoints.filter(p => p.x < this.width + 200); // 画面幅+200pxより左にある点だけを残す
+
+            // 4. 左側に隙間ができていたら、新しい点を追加して埋める
+            //    （whileループを使うことで、もしアニメーションが遅れても一気に隙間を埋められる）
+            while (this.rawPoints.length > 0 && this.rawPoints[1].x > this.height*1.2 + this.segmentsRate) {
+                const centerY = 0.7 * this.height;
+                let newY;
+
+                newY = centerY + (Math.random() - 0.5) * this.roughness;
+
+                const newX = this.rawPoints[1].x - this.segmentsRate;
+                this.rawPoints.splice(1,0,{x: newX, y: newY});
+            }
         }
-        // 4. 取り出しておいた左端の点を再び配列の先頭に戻す
-        this.rawPoints.unshift(fixedpoint);
-        }
+    }
 
 
     updateRoughness() {
