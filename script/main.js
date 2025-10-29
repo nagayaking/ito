@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         onRelease: () => {
             myLine.stopWave();
+            // setTimeout(myLine.stopWave, 50);
         }
     })
 

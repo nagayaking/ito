@@ -3,6 +3,7 @@ class InputManager {
         this.callbacks = callbacks;
         this.startTime = 0;
         this.isPressed = false;
+        this.releaseTimeout = null;
 
         buttonElement.addEventListener("mousedown", () => this.handleMouseDown());
         buttonElement.addEventListener("mouseup", () => this.handleMouseUp());
@@ -10,6 +11,7 @@ class InputManager {
     }
 
     handleMouseDown() {
+        clearTimeout(this.releaseTimeout);
         this.isPressed = true;
         this.startTime = Date.now();
 
@@ -22,9 +24,10 @@ class InputManager {
         if(!this.isPressed) return;
         this.isPressed = false;
         const duration = Date.now() - this.startTime;
-
-        if (this.callbacks.onRelease) {
-            this.callbacks.onRelease();
-        }
+        this.releaseTimeout = setTimeout(() => {
+            if (this.callbacks.onRelease) {
+                this.callbacks.onRelease();
+            }
+        }, 30)
     }
 }

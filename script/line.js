@@ -8,7 +8,7 @@ class Line {
         this.rawPoints = [];
         this.roughness = 5;
         this.segmentsRate = 50;
-        this.speed = 2;
+        this.speed = 3;
         this.pathElement = document.createElementNS(this.svgNS, 'path');
         this.pathElement.setAttribute('class', 'handwritten-line');
         this.svg.appendChild(this.pathElement);
@@ -21,28 +21,33 @@ class Line {
 
         for (let x = 1.2 * this.height; x <= this.width; x += this.segmentsRate) {
             let y = 0.7 * this.height + (Math.random() - 0.5) * this.roughness;
-            this.rawPoints.push({x: x, y: y, })
+            this.rawPoints.push({x: x, y: y})
         }
+        this.rawPoints.unshift({x: 1.1 * height - 5, y: 0.7 * this.height + (Math.random() - 0.5) * this.roughness})
     }
 
     startWave() {
         this.isWaving = true;
-        random1 = Math.random();
-        random2 = Math.random();
-        random3 = Math.random();
+        let random1 = Math.random();
+        let random2 = Math.random();
+        let random3 = Math.random();
 
-        this.rawPoints.splice(1, 0, 
-            {x: 1.2 * this.height, y: 0.7 * this.height - 100}, 
-            {x: 1.2 * this.height, y: 0.7 * this.height - 100 + (Math.random() - 0.5) * this.roughness},             
-            {x: 1.2 * this.height, y: 0.7 * this.height + (Math.random() - 0.5) * this.roughness},
-            {x: 1.2 * this.height, y: 0.7 * this.height + (Math.random() - 0.5) * this.roughness});
+        this.rawPoints.splice(2, 0,
+            {x: 1.2 * this.height, y: 0.7 * this.height},
+            {x: 1.2 * this.height, y: 0.7 * this.height - 100 + (random1 - 0.5) * this.roughness},
+            {x: 1.2 * this.height, y: 0.7 * this.height - 100 + (random1 - 0.5) * this.roughness},
+            {x: 1.2 * this.height, y: 0.7 * this.height - 100 + (random2 - 0.5) * this.roughness},
+            {x: 1.2 * this.height, y: 0.7 * this.height - 100 + (random2 - 0.5) * this.roughness},
+            {x: 1.2 * this.height, y: 0.7 * this.height + (random3 - 0.5) * this.roughness},
+            {x: 1.2 * this.height, y: 0.7 * this.height + (random3 - 0.5) * this.roughness});
     }
 
     stopWave() {
         this.isWaving = false;
+        let random4 = Math.random()
         this.rawPoints.splice(1, 0, 
-            {x: 1.2 * this.height, y: 0.7 * this.height}, 
-            {x: 1.2 * this.height, y: 0.7 * this.height + (Math.random() - 0.5) * this.roughness});
+            {x: 1.2 * this.height, y: 0.7 * this.height + (random4 - 0.5) * this.roughness},
+            {x: 1.2 * this.height, y: 0.7 * this.height + (random4 - 0.5) * this.roughness});
     }
 
     buildPathData() { 
@@ -61,7 +66,7 @@ class Line {
     updatePoints() {
         if (this.isWaving) {
             // 波を出している最中は、左端の点を上下に設置し固定して、他の点を右に動かす
-            const fixedpoints = this.rawPoints.splice(0,2); // 左端の点を一時的に取り出す
+            const fixedpoints = this.rawPoints.splice(0,5); // 左端の点を一時的に取り出す
             this.rawPoints.forEach(point => {
                 point.x += this.speed;
             });
@@ -73,24 +78,24 @@ class Line {
             this.rawPoints = this.rawPoints.filter(p => p.x < this.width + 200); // 画面幅+200pxより左にある点だけを残す
             // 4. 左側に隙間ができていたら、新しい点を追加して埋める
             //    （whileループを使うことで、もしアニメーションが遅れても一気に隙間を埋められる）
-            while (this.rawPoints.length > 0 && this.rawPoints[2].x > this.height*1.2 + this.segmentsRate) {
+            while (this.rawPoints.length > 0 && this.rawPoints[5].x > this.height*1.2 + this.segmentsRate) {
                 const centerY = 0.7 * this.height;
                 let newY;
 
                 newY = centerY - 100;
 
-                const newX = this.rawPoints[2].x - this.segmentsRate;
-                this.rawPoints.splice(1,0,{x: newX, y: newY});
+                const newX = this.rawPoints[5].x - this.segmentsRate;
+                this.rawPoints.splice(4,0,{x: newX, y: newY});
             }
 
         }else {
             // 1. 左端の点以外を右に動かす
-            const fixedpoint = this.rawPoints.shift(); // 左端の点を一時的に取り出す
+            const fixedpoint = this.rawPoints.splice(0, 2); // 左端の点を一時的に取り出す
             this.rawPoints.forEach(point => {
                 point.x += this.speed;
             });
             // 2. 取り出しておいた左端の点を再び配列の先頭に戻す
-            this.rawPoints.unshift(fixedpoint);
+            this.rawPoints.unshift(...fixedpoint);
 
             // 3. 画面の右側にはみ出しすぎた点を配列から削除する
             //    （配列が無限に長くなるのを防ぐ）
@@ -98,14 +103,14 @@ class Line {
 
             // 4. 左側に隙間ができていたら、新しい点を追加して埋める
             //    （whileループを使うことで、もしアニメーションが遅れても一気に隙間を埋められる）
-            while (this.rawPoints.length > 0 && this.rawPoints[1].x > this.height*1.2 + this.segmentsRate) {
+            while (this.rawPoints.length > 0 && this.rawPoints[2].x > this.height*1.2 + this.segmentsRate) {
                 const centerY = 0.7 * this.height;
                 let newY;
 
                 newY = centerY + (Math.random() - 0.5) * this.roughness;
 
-                const newX = this.rawPoints[1].x - this.segmentsRate;
-                this.rawPoints.splice(1,0,{x: newX, y: newY});
+                const newX = this.rawPoints[2].x - this.segmentsRate;
+                this.rawPoints.splice(2,0,{x: newX, y: newY});
             }
         }
     }
@@ -135,7 +140,7 @@ class Line {
             circle.setAttribute('cy', point.y);
             circle.setAttribute('r', '3'); // 円の半径
             circle.setAttribute('fill', 'red'); // 円の色
-            this.pointElementsGroup.appendChild(circle);
+            // this.pointElementsGroup.appendChild(circle);
         });
     }
 
