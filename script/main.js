@@ -28,8 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function fixedanimete() {
-        // myLine.updateRoughness();
         myCup.draw();
+        myLine.updateRoughness();
     }
     
     setInterval(fixedanimete, 400);

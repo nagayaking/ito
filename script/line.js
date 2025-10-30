@@ -117,9 +117,19 @@ class Line {
 
 
     updateRoughness() {
+        const fixedpoint = this.rawPoints.shift();
         this.rawPoints.forEach(point => {
-            point.y = 0.7 * this.height + (Math.random() - 0.5) * this.roughness;
+            point.y += (Math.random() - 0.5) * this.roughness
         });
+
+        // this.rawPoints.forEach(point => {
+        //     this.rawPoints.forEach(point => {
+        //         point.y += (Math.random() - 0.5) * this.roughness
+        //     })
+        // });
+        // 動きは面白い
+
+        this.rawPoints.unshift(fixedpoint);
     }
 
     draw() {
